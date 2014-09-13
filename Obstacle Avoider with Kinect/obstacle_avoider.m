@@ -1,20 +1,21 @@
+clear all;
+close all;
+
 % Variables to set the pins to which the motor driver is connected 
 % conveniently %
-LEFT_FRONT = 23;
-LEFT_REAR = 43;
-RIGHT_FRONT = 22;
-RIGHT_REAR = 42;
-RIGHT_PWM = 6;
-LEFT_PWM = 7;
+LEFT_DIR = 48;
+RIGHT_DIR = 47;
+RIGHT_EN = 3;
+LEFT_EN = 4;
+RIGHT_BR = 36;
+LEFT_BR = 38;
 
 % Connect to the board %
-a=arduino('COM3');
+a=arduino('COM15');
 
 % Specify digital pins' mode %
-a.pinMode(RIGHT_FRONT,'output')
-a.pinMode(RIGHT_REAR,'output')
-a.pinMode(LEFT_FRONT,'output')
-a.pinMode(LEFT_REAR,'output')
+a.pinMode(LEFT_DIR,'output')
+a.pinMode(RIGHT_DIR,'output')
 
 utilpath = fullfile(matlabroot, 'toolbox', 'imaq', 'imaqdemos', ...
     'html', 'KinectForWindows');
@@ -51,7 +52,9 @@ division2 = zeros(480,2);
 division2(:,1) = 2*640/3;
 division2(:,2) = 1:480;
 
-while(1)
+timer1 = tic;
+
+while toc(timer1)<7
     trigger(depthVid);
     [imd, depthTimeData, depthMetaData] = getdata(depthVid);
     trigger(colorVid);
@@ -72,7 +75,7 @@ while(1)
     hold off
     
     thresh = logical(imd~=0 & imd<1000);
-    thresh2 = bwareaopen(thresh,60);
+    thresh2 = bwareaopen(thresh,600);
     cc = bwconncomp(thresh2);
     centroid_struct = regionprops(cc,'Centroid');
     c = cat(1, centroid_struct.Centroid);
@@ -109,32 +112,32 @@ while(1)
     right = sum(logical(c>2*640/3));
     right = right(1,1);
     
+    SPEED = 130;
+    
     if right>mid
         if right>left
             %turn right
-            SPEED = 155;
-            x = 0.1;
-            move_right( x, a, RIGHT_FRONT, RIGHT_REAR, LEFT_FRONT, LEFT_REAR, RIGHT_EN, LEFT_EN, SPEED );
+            x = 0.4;
+            move_right(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
         else
             %turn left
-            SPEED = 155;
-            x = 0.1;
-            move_left( x, a, RIGHT_FRONT, RIGHT_REAR, LEFT_FRONT, LEFT_REAR, RIGHT_EN, LEFT_EN, SPEED );
+            x = 0.4;
+            move_left(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
         end
     else
         if mid>left
             %go straight
-            SPEED = 155;
             x = 0.1;
-            move_fwd( x, a, RIGHT_FRONT, RIGHT_REAR, LEFT_FRONT, LEFT_REAR, RIGHT_EN, LEFT_EN, SPEED );
+            move_fwd(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
         else
             %turn left
-            SPEED = 155;
-            x = 0.1;
-            move_left( x, a, RIGHT_FRONT, RIGHT_REAR, LEFT_FRONT, LEFT_REAR, RIGHT_EN, LEFT_EN, SPEED );
+            x = 0.4;
+            move_left(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
         end
     end
 end
 
-% stop(depthVid);
-% stop(colorVid);
+ stop(depthVid);
+ stop(colorVid);
+ SPEED = 0;
+ move_fwd(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);

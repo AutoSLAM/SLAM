@@ -35,7 +35,7 @@ while(1)
     imshow(imd,[]);
     
     thresh = logical(imd~=0 & imd<1000);
-    thresh2 = bwareaopen(thresh,60);
+    thresh2 = bwareaopen(thresh,600);
     cc = bwconncomp(thresh2);
     centroid_struct = regionprops(cc,'Centroid');
     c = cat(1, centroid_struct.Centroid);
