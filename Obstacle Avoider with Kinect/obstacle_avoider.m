@@ -1,40 +1,48 @@
-clear all;
-close all;
+cleanMode = 0;
 
-% Variables to set the pins to which the motor driver is connected 
-% conveniently %
-LEFT_DIR = 48;
-RIGHT_DIR = 47;
-RIGHT_EN = 3;
-LEFT_EN = 4;
-RIGHT_BR = 36;
-LEFT_BR = 38;
-
-% Connect to the board %
-a=arduino('COM15');
-
-% Specify digital pins' mode %
-a.pinMode(LEFT_DIR,'output')
-a.pinMode(RIGHT_DIR,'output')
-
-utilpath = fullfile(matlabroot, 'toolbox', 'imaq', 'imaqdemos', ...
-    'html', 'KinectForWindows');
-addpath(utilpath);
-
-imaqreset;
-hwInfo = imaqhwinfo('kinect');
-
-depthVid = videoinput('kinect',2);
-
-triggerconfig(depthVid,'manual');
-set(depthVid, 'FramesPerTrigger', 1);
-set(depthVid,'TriggerRepeat', Inf);
-
-colorVid = videoinput('kinect',1);
-
-triggerconfig(colorVid,'manual');
-set(colorVid, 'FramesPerTrigger', 1);
-set(colorVid,'TriggerRepeat', Inf);
+if cleanMode || ~exist('a','var') || ~exist('depthVid','var')
+    clear all;
+    close all;
+    
+    
+    % Variables to set the pins to which the motor driver is connected
+    % conveniently %
+    LEFT_DIR = 46;
+    RIGHT_DIR = 47;
+    RIGHT_EN = 3;
+    LEFT_EN = 4;
+    RIGHT_BR = 36;
+    LEFT_BR = 38;
+    
+    THRESHHOLD = 1000;
+    % Connect to the board, if it hasn't already been %
+    %if ~exist('a','var')
+    a=arduino('COM15');
+    %end
+    
+    % Specify digital pins' mode %
+    a.pinMode(LEFT_DIR,'output')
+    a.pinMode(RIGHT_DIR,'output')
+    
+    utilpath = fullfile(matlabroot, 'toolbox', 'imaq', 'imaqdemos', ...
+        'html', 'KinectForWindows');
+    addpath(utilpath);
+    
+    imaqreset;
+    hwInfo = imaqhwinfo('kinect');
+    
+    depthVid = videoinput('kinect',2);
+    
+    triggerconfig(depthVid,'manual');
+    set(depthVid, 'FramesPerTrigger', 1);
+    set(depthVid,'TriggerRepeat', Inf);
+    
+    colorVid = videoinput('kinect',1);
+    
+    triggerconfig(colorVid,'manual');
+    set(colorVid, 'FramesPerTrigger', 1);
+    set(colorVid,'TriggerRepeat', Inf);
+end
 
 t0 = tic;
 
@@ -54,7 +62,7 @@ division2(:,2) = 1:480;
 
 timer1 = tic;
 
-while toc(timer1)<7
+while toc(timer1)<30
     trigger(depthVid);
     [imd, depthTimeData, depthMetaData] = getdata(depthVid);
     trigger(colorVid);
@@ -74,8 +82,8 @@ while toc(timer1)<7
     plot(division2(:,1), division2(:,2), 'r.');
     hold off
     
-    thresh = logical(imd~=0 & imd<1000);
-    thresh2 = bwareaopen(thresh,600);
+    thresh = logical(imd~=0 & imd<THRESHHOLD);
+    thresh2 = bwareaopen(thresh,1600);
     cc = bwconncomp(thresh2);
     centroid_struct = regionprops(cc,'Centroid');
     c = cat(1, centroid_struct.Centroid);
@@ -112,32 +120,62 @@ while toc(timer1)<7
     right = sum(logical(c>2*640/3));
     right = right(1,1);
     
-    SPEED = 130;
+    SPEED_TURN = 35;
+    SPEED_FWD = 35;
     
-    if right>mid
-        if right>left
-            %turn right
-            x = 0.4;
-            move_right(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
-        else
-            %turn left
-            x = 0.4;
-            move_left(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
-        end
+    TIME_FWD = 0.1;
+    TIME_TURN = 0.075;
+    
+    %     if right>mid
+    %         if right>left
+    %             %turn right
+    %             move_right(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
+    %         else
+    %             %turn left
+    %             move_left(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
+    %         end
+    %     else
+    %         if mid>=left
+    %             %go straight
+    %             move_fwd(TIME_FWD, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_FWD);
+    %         else
+    %             %turn left
+    %             move_left(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
+    %         end
+    %     end
+    %
+    %     if left>mid && left>right
+    %         %turn left
+    %         move_left(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
+    %     elseif right>mid && right>left
+    %         %turn right
+    %         move_right(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
+    %     else
+    %         %go straight
+    %         move_fwd(TIME_FWD, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_FWD);
+    %     end
+    
+    % TODO: Account for size of object, distance of object, divide screen
+    % into more parts
+    if mid<=right && mid<=left
+        %go straight
+        move_fwd(TIME_FWD, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_FWD);
+        disp(['left:' num2str(left) ' mid:' num2str(mid) ' right:' num2str(right)]);
+    elseif right<=mid && right<=left
+        %Ironically, if the right side of the image has the least
+        %number of points, turn left. This is due to lateral
+        %inversion.
+        move_left(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
+        disp(['left:' num2str(left) ' mid:' num2str(mid) ' right:' num2str(right)]);
     else
-        if mid>left
-            %go straight
-            x = 0.1;
-            move_fwd(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
-        else
-            %turn left
-            x = 0.4;
-            move_left(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
-        end
+        %turn right
+        move_right(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
+        disp(['left:' num2str(left) ' mid:' num2str(mid) ' right:' num2str(right)]);
     end
+    
 end
 
- stop(depthVid);
- stop(colorVid);
- SPEED = 0;
- move_fwd(x, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED);
+stop(depthVid);
+stop(colorVid);
+SPEED_FWD = 0;
+move_fwd(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_FWD);
