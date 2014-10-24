@@ -1,3 +1,7 @@
+% VL_DEMO_SIFT_MATCH  Demo: SIFT: basic matching
+% with a few modifications to accept inout from kinect
+
+% modify to appropriate vl_setup path
 run('C:\Users\Joel\Documents\Code\LoP\vlfeat-0.9.19\toolbox\vl_setup')
 utilpath = fullfile(matlabroot, 'toolbox', 'imaq', 'imaqdemos', ...
     'html', 'KinectForWindows');
@@ -24,8 +28,6 @@ set(colorVid,'TriggerRepeat', Inf);
 timer1 = tic;
 start(depthVid);
 start(colorVid);
-
-% VL_DEMO_SIFT_MATCH  Demo: SIFT: basic matching
 
 pfx = fullfile(vl_root,'figures','demo') ;
 randn('state',0) ;
