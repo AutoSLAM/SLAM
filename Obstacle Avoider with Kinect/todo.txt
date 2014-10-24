@@ -1,0 +1,17 @@
+[] Account for size of object 
+[] Account for distance of object
+[] Divide screen into more parts
+[] Fix oscillations
+[] Make it go in straight line 
+		
+	|
+	|
+	|  O
+	|_____
+		|
+		|
+		|
+		|
+		|
+[] Use ultrasonic sensors in front to overcome problems of kinect     
+   in detecting objects closer than 80cm
