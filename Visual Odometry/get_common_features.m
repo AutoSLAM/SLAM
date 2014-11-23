@@ -23,14 +23,14 @@ set(colorVid,'TriggerRepeat', Inf);
 start(depthVid);
 start(colorVid);
 
-disp('Kinect ready. Press any key to capture first set of images...');
+disp('Kinect ready. Press any key or click on figure window to capture first image...');
 waitforbuttonpress;
 trigger(depthVid);
 [imd1, ~, ~] = getdata(depthVid);
 trigger(colorVid);
 [imc1, ~, ~] = getdata(colorVid);
 
-disp('Kinect ready. Press any key to capture second set of images...');
+disp('Kinect ready. Press any key or clikc on figure window to capture second image...');
 waitforbuttonpress;
 trigger(depthVid);
 [imd2, ~, ~] = getdata(depthVid);
