@@ -1,9 +1,10 @@
+%Configuring the Kinect device with Matlab to get the Device ID
 close all;
 utilpath = fullfile(matlabroot, 'toolbox', 'imaq', 'imaqdemos', ...
     'html', 'KinectForWindows');
 addpath(utilpath);
 
-imaqreset;
+imaqreset;%Image aquisition adapters reset
 
 % create a video input object to handle the stream from the Kinect's
 % depth camera, and set appropriate parameters, so that
@@ -34,6 +35,7 @@ trigger(colorVid);
 [imc2, ~, ~] = getdata(colorVid);
 
 while(true)
+    % trriger an image and do odometry estimation every one second
     if toc(x)>1
         trigger(depthVid);
         imd1=imd2;
@@ -42,14 +44,22 @@ while(true)
         [imd2, ~, ~] = getdata(depthVid);
         trigger(colorVid);
         [imc2, ~, ~] = getdata(colorVid);
+        
+        % calculate amount of rotation
         deltheta = do_rotation(imc1,imc2,imd1,imd2)
         deltheta=deltheta*pi/180;
+        
         if(deltheta==0)
+            % if there is no rotation, then calculate translation amount
             deltax = do_translation(imc1,imc2,imd1,imd2);
+            % plot translation
             origin = plot_robot(double(deltax),0,origin);
         else
             deltax=0;
+            %plot rotation
             origin = plot_robot(0,double(deltheta),origin);
+            
+            % flush out for 0.2- keep triggering images and ignore them
             y = tic;
             while toc(y) < 0.2
                 imd1 = imd2;
@@ -59,6 +69,7 @@ while(true)
                 trigger(colorVid);
                 [imc2, ~, ~] = getdata(colorVid);
             end
+            
         end
         deltax
         x=tic;
