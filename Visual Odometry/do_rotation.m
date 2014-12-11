@@ -1,30 +1,13 @@
 % Function to obtain the angle rotated by the bot 
 % between an initial and final image
-function theta = do_rotation(Ia, Ib, Ida, ~)
-
-% http://www.mathworks.in/help/vision/examples/sparse-3-d-reconstruction-from-two-views.html?prodcode=VP&language=en
-% Use SURF to detect feature points
-imPts1 = detectSURFFeatures(rgb2gray(Ia));
-imPts2 = detectSURFFeatures(rgb2gray(Ib));
-
-% Extract feature descriptors
-[features1, valid1] = extractFeatures(rgb2gray(Ia), imPts1);
-[features2, valid2] = extractFeatures(rgb2gray(Ib), imPts2);
-
-% Extract index pairs corresponding to matching features
-indexPairs = matchFeatures(features1, features2);
-
-% Extract matching features
-matchedPoints1 = valid1(indexPairs(:, 1));
-%matchedPoints1 = matchedPoints1(Ida(matchedPoints1) > 0);
-matchedPoints2 = valid2(indexPairs(:, 2));
+function theta = do_rotation(~, Ib, Ida, ~, matchedPoints1, matchedPoints2, valid2)
 
 % Show most recent image, and plot the feature points on it
-figure(1);
-subplot(1,2,1);
-imshow(Ib); hold on;
-valid2.plot('showOrientation',true);
-hold off;
+% figure(1);
+% subplot(1,2,1);
+% imshow(Ib); hold on;
+% valid2.plot('showOrientation',true);
+% hold off;
 
 % To store number of matching feature points
 n = 0;
@@ -47,7 +30,7 @@ end
 % obtain theta using theta = l/c*r
 theta = l_by_r/(c*n);
 
-% ignore theta < 7 (since this is likely noise)
-if(abs(theta)<7);
-    theta=0;
-end
+% % ignore theta < 7 (since this is likely noise)
+% if(abs(theta)<7);
+%     theta=0;
+% end
