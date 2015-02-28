@@ -72,7 +72,8 @@ division2(:,1) = 2*640/3;
 division2(:,2) = 1:480;
 
 origin = [0 0 pi/2];
-origin=plot_robot(0,0,origin);
+bot_tri = [];
+[origin, bot_tri]=plot_robot(0,0,origin,bot_tri);
 
 trigger(depthVid);
 [imd2, ~, ~] = getdata(depthVid);
@@ -232,7 +233,7 @@ while toc(timer1)<60
                 % if there is no rotation, then calculate translation amount
                 deltax = do_translation(imc1,imc2,imd1,imd2);
                 % plot translation
-                origin = plot_robot(double(deltax),0,origin);
+                [origin, bot_tri] = plot_robot(double(deltax),0,origin,bot_tri);
             elseif right<=mid && right<=left
                 %Ironically, if the right side of the image has the least
                 %number of points, turn left. This is due to lateral
@@ -243,7 +244,7 @@ while toc(timer1)<60
                 deltheta = do_rotation(imc1,imc2,imd1,imd2,matchedPoints1,matchedPoints2,valid2)
                 deltheta=deltheta*pi/180;
                 % plot translation
-                origin = plot_robot(0,double(deltheta),origin);
+                [origin, bot_tri] = plot_robot(0,double(deltheta),origin,bot_tri);
             else
                 %turn right
                 move_right(TIME_TURN, a, RIGHT_DIR, LEFT_DIR, RIGHT_EN, LEFT_EN, SPEED_TURN);
@@ -252,7 +253,7 @@ while toc(timer1)<60
                 deltheta = do_rotation(imc1,imc2,imd1,imd2,matchedPoints1,matchedPoints2,valid2)
                 deltheta=deltheta*pi/180;
                 % plot translation
-                origin = plot_robot(0,double(deltheta),origin);
+                [origin, bot_tri] = plot_robot(0,double(deltheta),origin,bot_tri);
             end
         else
             deltheta = do_rotation(imc1,imc2,imd1,imd2,matchedPoints1,matchedPoints2,valid2)
@@ -262,11 +263,11 @@ while toc(timer1)<60
                 % if there is no rotation, then calculate translation amount
                 deltax = do_translation(imc1,imc2,imd1,imd2);
                 % plot translation
-                origin = plot_robot(double(deltax),0,origin);
+                [origin, bot_tri] = plot_robot(double(deltax),0,origin,bot_tri);
             else
                 deltax=0;
                 %plot rotation
-                origin = plot_robot(0,double(deltheta),origin);
+                [origin, bot_tri] = plot_robot(0,double(deltheta),origin,bot_tri);
                 
                 % flush out for 0.2- keep triggering images and ignore them
                 y = tic;
